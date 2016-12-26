@@ -13,4 +13,5 @@
     'summary': 'Selected entities with colombian banking license.',
     'depends': ['base'],
     'data': ['data/res_bank.xml'],
+    'auto_install': True,
 }

@@ -21,6 +21,9 @@
         <attribute name="domain">[('country_id', '=?', country_id)]</attribute>
         <attribute name="context">{'default_country_id': country_id}</attribute>
       </field>
+      <field name="country_id" position="attributes">
+        <attribute name="on_change" />
+      </field>
     </field>
   </record>
 </odoo>

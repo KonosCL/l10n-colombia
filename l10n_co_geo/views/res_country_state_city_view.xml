@@ -36,6 +36,6 @@
     <field name="view_type">form</field>
   </record>
   <menuitem action="action_city" id="menu_city_partner" parent="base.menu_localisation"
-    groups="base.group_no_one" />
+    groups="base.group_no_one" sequence="2"/>
 </odoo>
 
