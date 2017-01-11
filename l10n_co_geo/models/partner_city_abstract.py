@@ -40,13 +40,16 @@ class PartnerCityAbstract(models.AbstractModel):
             vals['state_id'] = self.env[
                 'res.country.state.city'
             ].browse(vals.get('city_id')).state_id.id
-        if set_to_zero(vals, 'state_id') and self.city_id:
-            vals['state_id'] = self.city_id.state_id.id
+        if len(self) == 1:
+            if set_to_zero(vals, 'state_id') and self.city_id:
+                vals['state_id'] = self.city_id.state_id.id
         if vals.get('state_id'):
             vals['country_id'] = self.env[
                 'res.country.state'
             ].browse(vals.get('state_id')).country_id.id
-        if set_to_zero(vals, 'country_id') and self.city_id or self.state_id:
-            country_rel = self.city_id or self.state_id
-            vals['country_id'] = country_rel.country_id.id
+        if len(self) == 1:
+            if set_to_zero(vals, 'country_id') and \
+                    self.city_id or self.state_id:
+                country_rel = self.city_id or self.state_id
+                vals['country_id'] = country_rel.country_id.id
         return vals
