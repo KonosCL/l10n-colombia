@@ -2,28 +2,21 @@
 # Copyright 2016 David Arnold, DevCO Colombia
 # License LGPL-3.0 or later (http://www.gnu.org/licenses/lgpl).
 
-from odoo import models, fields, api
+from odoo import models, api
 
 
 class ResPartner(models.Model):
-    _inherit = 'res.partner'
+    _name = 'res.partner'
+    _inherit = ['res.partner', 'partner.city.abstract']
 
-    city = fields.Char(
-        invisible=True
-    )
+    @api.model
+    def _address_fields(self):
+        return super(ResPartner, self)._address_fields() + ['city_id']
 
-    state_id = fields.Many2one(
-        'res.country.state',
-        related='city_id.state_id',
-        readonly=True,
-    )
+    @api.model
+    def create(self, vals):
+        return super(ResPartner, self).create(self._complete_address(vals))
 
-    city_id = fields.Many2one(
-        comodel_name='res.country.state.city',
-        string=u'City',
-        ondelete='cascade'
-    )
-
-    @api.onchange('city_id')
-    def onchange_city(self):
-        self.city = self.city_id.name
+    @api.multi
+    def write(self, vals):
+        return super(ResPartner, self).write(self._complete_address(vals))

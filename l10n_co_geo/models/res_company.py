@@ -6,46 +6,40 @@ from odoo import models, fields, api
 
 
 class ResCompany(models.Model):
-    _inherit = 'res.company'
-
-    country_id = fields.Many2one(
-        comodel_name='res.country',
-        related='city_id.state_id.country_id',
-        readonly=True,
-        required=False,
-        index=False,
-        default=None,
-        help=False,
-        domain=[],
-        context={},
-        ondelete='cascade',
-        auto_join=False
-    )
-
-    city = fields.Char(
-        invisible=True
-    )
-
-    state_id = fields.Many2one(
-        'res.country.state',
-        related='city_id.state_id',
-        readonly=True,
-    )
+    _name = 'res.company'
+    _inherit = ['res.company', 'partner.city.abstract']
 
     city_id = fields.Many2one(
-        comodel_name='res.country.state.city',
-        string=u'City',
-        required=True,
-        readonly=False,
-        index=False,
-        default=None,
-        help=False,
-        domain=[],
-        context={},
-        ondelete='cascade',
-        auto_join=False,
-    )
+        'res.country.state.city', 'City',
+        compute="_compute_address", inverse='_inverse_city_id')
 
-    @api.onchange('city_id')
-    def _change_city(self):
-        self.city = self.city_id.name
+    @api.onchange('country_id')
+    def _onchange_country_wrapper(self):
+        values = self.on_change_country(self.country_id.id)['value']
+        for fname, value in values.iteritems():
+            setattr(self, fname, value)
+
+    # TODO @api.depends(): currently now way to formulate the dependency on the
+    # partner's contact address
+    def _compute_address(self):
+        # TODO BACKPORT
+        # refactor if https://github.com/odoo/odoo/pull/15213 gets accepted
+        for company in self.filtered(lambda company: company.partner_id):
+            address_data = company.partner_id.sudo(
+            ).address_get(adr_pref=['contact'])
+            if address_data['contact']:
+                partner = company.partner_id.browse(address_data['contact'])
+                company.city_id = partner.city_id
+        return super(ResCompany, self)._compute_address()
+
+    def _inverse_city_id(self):
+        for company in self:
+            company.partner_id.city_id = company.city_id
+
+    @api.model
+    def create(self, vals):
+        return super(ResCompany, self).create(self._complete_address(vals))
+
+    @api.multi
+    def write(self, vals):
+        return super(ResCompany, self).write(self._complete_address(vals))
