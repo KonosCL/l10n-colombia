@@ -23,7 +23,7 @@ class ResCompany(models.Model):
     fax = fields.Char(compute='_compute_address', inverse='_inverse_fax')
     city_id = fields.Many2one(
         'res.country.state.city', 'City',
-        compute="_compute_address", inverse='_inverse_city_id')
+        compute="_compute_address", inverse='_inverse_city_id', store=False)
 
     @api.onchange('country_id')
     def _onchange_country_wrapper(self):
